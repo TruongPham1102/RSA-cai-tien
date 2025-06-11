@@ -1,0 +1,104 @@
+#include <iostream>
+#include <cmath>
+#include <cstdlib>
+#include <ctime>
+
+using namespace std;
+
+// Hàm tính (base^exp) % mod
+long long mod_pow(long long base, long long exp, long long mod) {
+    long long result = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) result = (result * base) % mod;
+        exp = exp >> 1;
+        base = (base * base) % mod;
+    }
+    return result;
+}
+
+// Hàm kiểm tra số nguyên tố
+bool isPrime(long long n) {
+    if (n <= 1) return false;
+    for (long long i = 2; i * i <= n; ++i) {
+        if (n % i == 0) return false;
+    }
+    return true;
+}
+
+// Tìm phần tử nguyên thủy (primitive root)
+long long findPrimitiveRoot(long long p) {
+    for (long long g = 2; g < p; ++g) {
+        bool isPrimitive = true;
+        for (long long i = 1; i < p - 1; ++i) {
+            if (mod_pow(g, i, p) == 1) {
+                isPrimitive = false;
+                break;
+            }
+        }
+        if (isPrimitive && mod_pow(g, p - 1, p) == 1) return g;
+    }
+    return -1;
+}
+
+// Tạo khóa
+void generateKeys(long long &p, long long &g, long long &x, long long &y) {
+    cout << "Nhập số nguyên tố p: ";
+    cin >> p;
+    if (!isPrime(p)) {
+        cout << "p phải là số nguyên tố!" << endl;
+        exit(1);
+    }
+
+    g = findPrimitiveRoot(p);
+    if (g == -1) {
+        cout << "Không tìm được phần tử nguyên thủy cho p." << endl;
+        exit(1);
+    }
+
+    // Khóa bí mật x, khóa công khai y = g^x mod p
+    srand(time(0));
+    x = rand() % (p - 2) + 1; // 1 <= x <= p-2
+    y = mod_pow(g, x, p);
+
+    cout << "Khóa công khai (p=" << p << ", g=" << g << ", y=" << y << ")\n";
+    cout << "Khóa bí mật x = " << x << endl;
+}
+
+// Mã hóa ElGamal: nhập m, chọn khóa tạm k, tính (c1, c2)
+void encrypt(long long p, long long g, long long y, long long m, long long &c1, long long &c2) {
+    if (m < 0 || m >= p) {
+        cout << "Thông điệp phải nằm trong khoảng [0, p-1]!" << endl;
+        exit(1);
+    }
+    long long k = rand() % (p - 2) + 1;
+    c1 = mod_pow(g, k, p);
+    c2 = (m * mod_pow(y, k, p)) % p;
+    cout << "Thông điệp được mã hóa: (" << c1 << ", " << c2 << ")\n";
+}
+
+// Giải mã ElGamal
+long long decrypt(long long p, long long x, long long c1, long long c2) {
+    long long s = mod_pow(c1, x, p);
+    long long s_inv = mod_pow(s, p - 2, p); // Nghịch đảo modulo bằng định lý Fermat
+    long long m = (c2 * s_inv) % p;
+    return m;
+}
+
+// Main
+int main() {
+    long long p, g, x, y;
+    generateKeys(p, g, x, y);
+
+    long long m;
+    cout << "\nNhập thông điệp cần mã hóa (số nguyên < p): ";
+    cin >> m;
+
+    long long c1, c2;
+    encrypt(p, g, y, m, c1, c2);
+
+    long long decrypted = decrypt(p, x, c1, c2);
+    cout << "Thông điệp sau khi giải mã: " << decrypted << endl;
+
+    return 0;
+}
