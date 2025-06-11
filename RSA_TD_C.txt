@@ -1,0 +1,135 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Hàm tính lũy thừa modulo: base^expo mod m
+long long power(long long base, long long expo, long long m) {
+    long long res = 1; // Kết quả ban đầu
+    base = base % m; // Lấy modulo của base
+    while (expo > 0) {
+        if (expo & 1) // Nếu expo lẻ
+            res = (res * base) % m; // Nhân kết quả với base
+        base = (base * base) % m; // Bình phương base
+        expo = expo / 2; // Chia đôi lũy thừa
+    }
+    return res; // Trả về kết quả
+}
+
+// Hàm kiểm tra số nguyên tố
+bool check(long long n) {
+    if (n <= 1) return false; // Số <= 1 không phải nguyên tố
+    for (long long i = 2; i * i <= n; i++) {
+        if (n % i == 0) return false; // Nếu chia hết thì không phải nguyên tố
+    }
+    return true; // Là số nguyên tố
+}
+
+// Hàm tạo số nguyên tố ngẫu nhiên trong khoảng [100, 1000]
+long long genaratePrime() {
+    long long p;
+    do {
+        p = rand() % 900 + 100; // Tạo số trong [100, 999]
+    } while (!check(p)); // Lặp đến khi tìm được số nguyên tố
+    return p; // Trả về số nguyên tố
+}
+
+// Hàm tìm nghịch đảo modulo của e theo phi
+long long modInverse(long long e, long long phi) {
+    for (long long d = 2; d < phi; d++) {
+        if ((e * d) % phi == 1) // Nếu e * d ≡ 1 (mod phi)
+            return d; // Trả về nghịch đảo
+    }
+    return -1; // Không tìm thấy nghịch đảo
+}
+
+// Hàm tạo khóa RSA
+void genarateKey(long long &e, long long &d, long long &n) {
+    srand(time(0)); // Khởi tạo seed ngẫu nhiên
+    long long p = genaratePrime(); // Tạo số nguyên tố p
+    long long q = genaratePrime(); // Tạo số nguyên tố q
+    while (p == q) q = genaratePrime(); // Đảm bảo p khác q
+
+    cout << "Số nguyên tố: p = " << p << ", q = " << q << endl; // In p, q
+    n = p * q; // Tính n = p * q
+    long long phi = (p - 1) * (q - 1); // Tính phi = (p-1) * (q-1)
+
+    // Chọn e sao cho 1 < e < phi và gcd(e, phi) = 1
+    for (e = 2; e < phi; e++) {
+        if (__gcd(e, phi) == 1)
+            break;
+    }
+    d = modInverse(e, phi); // Tính d
+    if (d == -1) { // Kiểm tra lỗi
+        cout << "Không tìm thấy nghịch đảo modulo!" << endl;
+        exit(1);
+    }
+}
+
+// Hàm mã hóa một ký tự
+long long encryptChar(char ch, long long e, long long n) {
+    long long m = static_cast<long long>(ch); // Chuyển ký tự thành số (ASCII)
+    return power(m, e, n); // Mã hóa: m^e mod n
+}
+
+// Hàm giải mã một số thành ký tự
+char decryptChar(long long c, long long d, long long n) {
+    long long m = power(c, d, n); // Giải mã: c^d mod n
+    return static_cast<char>(m); // Chuyển số thành ký tự
+}
+
+// Hàm mã hóa chuỗi
+vector<long long> encryptString(const string &message, long long e, long long n) {
+    vector<long long> cipher; // Danh sách số mã hóa
+    for (char ch : message) {
+        cipher.push_back(encryptChar(ch, e, n)); // Mã hóa từng ký tự
+    }
+    return cipher; // Trả về danh sách mã hóa
+}
+
+// Hàm giải mã chuỗi
+string decryptString(const vector<long long> &cipher, long long d, long long n) {
+    string banro; // Chuỗi giải mã
+    for (long long c : cipher) {
+        banro += decryptChar(c, d, n); // Giải mã từng số
+    }
+    return banro; // Trả về chuỗi giải mã
+}
+
+int main() {
+    long long e, d, n; // Biến cho khóa và n
+
+    // Tạo khóa RSA
+    genarateKey(e, d, n);
+
+    // In khóa
+    cout << "Khóa công khai (e, n): (" << e << ", " << n << ")\n";
+    cout << "Khóa bí mật (d, n): (" << d << ", " << n << ")\n";
+
+    // Nhập thông điệp từ người dùng
+    string M;
+    cout << "Nhập thông điệp: ";
+    getline(cin, M); // Nhập cả dòng, hỗ trợ thông điệp có dấu cách
+
+    // Kiểm tra thông điệp hợp lệ
+    for (char ch : M) {
+        if (static_cast<long long>(ch) >= n) {
+            cout << "Ký tự '" << ch << "' có giá trị ASCII quá lớn so với n (" << n << ").\n";
+            return 1;
+        }
+    }
+
+    cout << "Thông điệp gốc: " << M << endl;
+
+    // Mã hóa thông điệp
+    vector<long long> cipher = encryptString(M, e, n);
+    cout << "Thông điệp mã hóa: ";
+    for (long long c : cipher) {
+        cout << c << " "; // In danh sách số mã hóa
+    }
+    cout << endl;
+
+    // Giải mã thông điệp
+    string decrypted = decryptString(cipher, d, n);
+    cout << "Thông điệp giải mã: " << decrypted << endl;
+
+    return 0;
+}

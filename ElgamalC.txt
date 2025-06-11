@@ -1,0 +1,89 @@
+#include <iostream>
+#include <cstdlib>
+#include <ctime>
+#include <string>
+#include <vector>
+
+using namespace std;
+
+// Hàm tính (base^exp) % mod
+long long mod_pow(long long base, long long exp, long long mod) {
+    long long result = 1;
+    base %= mod;
+    while (exp > 0) {
+        if (exp % 2 == 1) result = (result * base) % mod;
+        exp >>= 1;
+        base = (base * base) % mod;
+    }
+    return result;
+}
+
+// Tạo khóa
+void generateKeys(long long &p, long long &g, long long &x, long long &y) {
+    p = 29; // Số nguyên tố cố định (>26)
+    g = 2;  // Phần tử nguyên thủy cố định
+    srand(time(0));
+    x = rand() % (p - 2) + 1; // 1 <= x <= p-2
+    y = mod_pow(g, x, p);
+    cout << "Khóa công khai: (p=" << p << ", g=" << g << ", y=" << y << ")\n";
+    cout << "Khóa bí mật: x=" << x << "\n";
+}
+
+// Mã hóa ElGamal
+void encrypt(long long p, long long g, long long y, long long m, long long &c1, long long &c2) {
+    long long k = rand() % (p - 2) + 1;
+    c1 = mod_pow(g, k, p);
+    c2 = (m * mod_pow(y, k, p)) % p;
+}
+
+// Giải mã ElGamal
+long long decrypt(long long p, long long x, long long c1, long long c2) {
+    long long s = mod_pow(c1, x, p);
+    long long s_inv = mod_pow(s, p - 2, p);
+    return (c2 * s_inv) % p;
+}
+
+// Chuyển ký tự thành số (A=1, B=2, ..., Z=26)
+long long charToNumber(char c) {
+    return c - 'A' + 1;
+}
+
+// Chuyển số thành ký tự (1=A, 2=B, ..., 26=Z)
+char numberToChar(long long n) {
+    return 'A' + n - 1;
+}
+
+// Main
+int main() {
+    long long p, g, x, y;
+    generateKeys(p, g, x, y);
+
+    string message = "HAUI";
+    vector<pair<long long, long long>> ciphertexts;
+
+    // Mã hóa
+    for (char c : message) {
+        long long m = charToNumber(c);
+        long long c1, c2;
+        encrypt(p, g, y, m, c1, c2);
+        ciphertexts.push_back({c1, c2});
+    }
+
+    // In bản mã
+    cout << "Bản mã của \"HAUI\": ";
+    for (const auto &cipher : ciphertexts) {
+        cout << "(" << cipher.first << "," << cipher.second << ") ";
+    }
+    cout << "\n";
+
+    // Giải mã
+    string decrypted_message;
+    for (const auto &cipher : ciphertexts) {
+        long long m = decrypt(p, x, cipher.first, cipher.second);
+        decrypted_message += numberToChar(m);
+    }
+
+    cout << "Chuỗi giải mã: " << decrypted_message << "\n";
+
+    return 0;
+}

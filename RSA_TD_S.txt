@@ -1,0 +1,108 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+// Hàm kiểm tra số nguyên tố
+bool isPrime(int n) {
+    if (n < 2) return false;
+    for (int i = 2; i * i <= n; i++) {
+        if (n % i == 0) return false;
+    }
+    return true;
+}
+
+// Hàm chọn số nguyên tố ngẫu nhiên trong khoảng [min, max]
+int generatePrime(int min, int max) {
+    int num;
+    do {
+        num = rand() % (max - min + 1) + min;
+    } while (!isPrime(num));
+    return num;
+}
+
+// Hàm tính lũy thừa modulo: base^expo mod m
+int power(int base, int expo, int m) {
+    int res = 1;
+    base = base % m;
+    while (expo > 0) {
+        if (expo & 1)
+            res = (res * 1LL * base) % m;
+        base = (base * 1LL * base) % m;
+        expo = expo / 2;
+    }
+    return res;
+}
+
+// Hàm tìm nghịch đảo modulo của e modulo phi
+int modInverse(int e, int phi) {
+    for (int d = 2; d < phi; d++) {
+        if ((e * d) % phi == 1)
+            return d;
+    }
+    return -1;
+}
+
+// Hàm tạo khóa RSA
+void generateKeys(int &e, int &d, int &n, int &p, int &q) {
+    // Chọn hai số nguyên tố p và q
+    srand(time(0));
+    p = generatePrime(1000, 10000);
+    do {
+        q = generatePrime(1000, 10000);
+    } while (q == p); // Đảm bảo p và q khác nhau
+    
+    n = p * q;
+    int phi = (p - 1) * (q - 1);
+
+    // Chọn e sao cho 1 < e < phi(n) và gcd(e, phi(n)) == 1
+    for (e = 2; e < phi; e++) {
+        if (__gcd(e, phi) == 1)
+            break;
+    }
+
+    // Tính d sao cho e * d ≡ 1 (mod phi(n))
+    d = modInverse(e, phi);
+}
+
+// Hàm mã hóa
+int encrypt(int m, int e, int n) {
+    return power(m, e, n);
+}
+
+// Hàm giải mã
+int decrypt(int c, int d, int n) {
+    return power(c, d, n);
+}
+
+int main() {
+    int e, d, n, p, q;
+    
+    // Tạo khóa
+    generateKeys(e, d, n, p, q);
+  
+    // In các giá trị
+    cout << "p: " << p << "\n";
+    cout << "q: " << q << "\n";
+    cout << "Public Key (e, n): (" << e << ", " << n << ")\n";
+    cout << "Private Key (d, n): (" << d << ", " << n << ")\n";
+
+    // Nhập thông điệp
+    int M;
+    cout << "Nhap thong diep (dang so nguyen): ";
+    cin >> M;
+
+    // Kiểm tra thông điệp hợp lệ
+    if (M >= n) {
+        cout << "Thong diep phai nho hon n (" << n << "). Vui long chay lai chuong trinh.\n";
+        return 1;
+    }
+
+    // Mã hóa thông điệp
+    int C = encrypt(M, e, n);
+    cout << "Encrypted Message: " << C << "\n";
+
+    // Giải mã thông điệp
+    int decrypted = decrypt(C, d, n);
+    cout << "Decrypted Message: " << decrypted << "\n";
+
+    return 0;
+}
