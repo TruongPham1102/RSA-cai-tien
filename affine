@@ -1,0 +1,56 @@
+#include <iostream>
+
+using namespace std;
+const int a = 17;
+const int b =20;
+string encrypt3(string banro)
+{
+    string result= "";
+    for(int i=0;i<banro.length();i++)
+    {
+        if(banro[i]!=' ')
+        {
+            result +=  (char) (((a*(banro[i]-65)+b) %26) +65);
+        }
+        else
+        {
+            result += banro[i];
+        }
+    }
+    return result;
+}
+
+string Decrypt3(string banma)
+{
+    string result = "";
+    int diemdung=0;
+    int a_inv =0;
+    for(int i=0;i<26;i++)
+    {
+        diemdung = (a*i)%26;
+        if(diemdung ==1)
+        {
+            a_inv = i;
+        }
+    }
+    for(int i=0;i<banma.length();i++)
+    {
+        if(banma[i]!=' ')
+        {
+            result+= (char) (((a_inv * ((banma[i]-'A' - b+26)) % 26)) + 'A');
+        }
+        else
+        {
+            result += banma[i];
+        }
+    }
+    return result;
+}
+
+int main()
+{
+    string M = "AFFINE CIPHER";
+    cout<< encrypt3(M);
+    string C = encrypt3(M);
+    cout<< Decrypt3(C);
+}
