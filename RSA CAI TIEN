@@ -1,0 +1,124 @@
+#include <bits/stdc++.h>
+using namespace std;
+
+
+
+long long power(long long base, long long expo, long long m)
+{
+    long long res= 1;
+    base = base %m;
+    while(expo>0)
+    {
+        if(expo&1)
+        {
+            res = (res*base)%m;
+        }
+        base = (base * base)%m;
+        expo = expo/2;
+    }
+    return res;
+}
+
+bool check(long long n)
+{
+    if(n<=1) return false;
+    for(long long i =2; i*i<=n;i++)
+    {
+        if(n%i==0) return false;
+    }
+    return true;
+}
+
+long long genaratePrime()
+{
+    long long p;
+    do
+    {
+        p = rand()%1000 +100;
+
+    }while (!check(p));
+    return p;
+}
+
+long long modInverse(long long e, long long phi)
+{
+    for(long long d =2; d<phi;d++)
+    {
+        if((e*d)%phi==1)
+        {
+            return d;
+        }
+    }
+     return -1;
+}
+
+void genarateKey(long long &e, long long &d, long long &n)
+{   //srand(time(0));
+    //long long p = genaratePrime();
+    //long long q = genaratePrime();
+
+    //while (p == q) q = genaratePrime();
+ long long p =509; long long q = 137;
+    cout<< p << "va"<< " "<< q<<endl;
+    n = p*q;
+    long long phi = (p-1)*(q-1);
+    for(e = 2; e<phi; e++)
+    {
+        if(__gcd(e,phi)==1)
+        {
+            break;
+        }
+    }
+    d = modInverse(e,phi);
+}
+
+long long encryptChar(char ch, long long e , long long n)
+{
+    long long m= static_cast<long long > (ch);
+    return power(m,e,n);
+}
+
+char decryptChar(long long c, long long d, long long n)
+{
+    long long m = power(c,d,n);
+    return static_cast<char>(m);
+
+}
+
+vector <long long> encryptString (const string &message, long long e, long long n)
+{
+    vector<long long> cipher;
+    for(char ch : message)
+    {
+        cipher.push_back(encryptChar(ch,e,n));
+    }
+    return cipher;
+}
+
+string decryptString(const vector<long long> &cipher, long long d, long long n)
+{
+    string banro;
+    for(long long c : cipher)
+    {
+        banro+= decryptChar(c,d,n);
+
+    }
+    return banro;
+}
+int main()
+{
+
+    long long e,d,n;
+    genarateKey(e,d,n);
+    string M = "HAUI";
+    vector<long long> cipher = encryptString(M,e,n);
+    for(long long c: cipher)
+    {
+        cout<< c <<" ";
+    }
+    cout<<endl;
+    string decrypted = decryptString(cipher,d,n);
+    cout<< decrypted;
+
+
+    }
