@@ -1,0 +1,143 @@
+#include <iostream>
+#include <vector>
+#include <string>
+#include <cstdlib>
+#include <ctime>
+#include <cmath>
+
+using namespace std;
+
+//Luy thua
+int power(int a, int b, int n){
+    int kq = 1;
+    a = a % n;
+    while(b > 0) {
+        if(b % 2 == 1)
+            kq = (kq * 1ll * a) % n;
+        a = (a * 1ll * a) % n;
+        b = b/2;
+    }
+    return kq;
+}
+//UCLN
+int gcd(int a, int b) {
+    if (b == 0)
+        return a;
+    return gcd(b, a % b);
+}
+//Kiem ta SNT
+bool kt(int n){
+    if(n<=1)
+        return false;
+    for(int i=2;i*i<=n; i++){
+        if(n%i==0)
+            return false;
+    }
+    return true;
+}
+//Sinh so nguyen to
+int SinhSNT(int a, int b){
+    int SNT = 0;
+    do{
+        SNT= rand()%(b-a+1) + a;
+    }
+    while(!kt(SNT));
+    return SNT;
+}
+//Tim e^-1 bang r = ax + by
+int nghichdao(int a, int b) {
+    int r1 = b, r2 = a;
+    int x = 0, y = 1;
+    while (r2 != 0) {
+        int q = r1 / r2;
+
+        int temp = r2;
+        r2 = r1 - q * r2;
+        r1 = temp;
+
+        temp = y;
+        y = x - q * y;
+        x = temp;
+    }
+    if (r1 > 1)
+        return -1; // e khong co nghich dao
+    if (x < 0)
+        x += b;
+    return x;
+}
+//Sinh khoa
+void SinhKoa(int &p, int &a, int &x, int &y) {
+    a = rand() % (p-2) + 2;
+    x = rand() % (p-2) + 1;
+    y = power(a,x,p);
+}
+//Ma Hoa bang khoa cong khai
+/*void MaHoa(int M, int p, int a, int y,int &C1, int &C2){
+    //Chon K voi 1<= k <= p-1
+    int k = rand()%(p-1)+1;
+    //Tinh K
+    int K = power(y,k,p);
+    //Cap khoa
+    C1 = power(a,k,p);
+    C2 = (K*1ll*M)%p;
+    cout<<"Thong diep duoc ma hoa thanh: C1 = "<<C1<<", C2 = "<<C2<<endl;
+}
+//Giai Ma bang khoa bi mat
+int GiaiMa(int p, int x, int C1, int C2){
+    int K = power(C1,x,p);
+    int C = nghichdao(K,p);
+    return (C2 * 1ll * C)%p;
+}*/
+
+vector<pair<int, int>> MaHoa(const string &M, int p, int a, int y) {
+    vector<pair<int, int>> danhSachBanMa;
+
+    for (char kyTu : M) {
+        int m = (int)kyTu; // mã ASCII
+
+        int k = rand() % (p - 1) + 1;
+        int K = power(y, k, p);               // K = y^k mod p
+        int C1 = power(a, k, p);             // C1 = a^k mod p
+        int C2 = (1LL * K * m) % p;              // C2 = K * M mod p
+        danhSachBanMa.push_back({C1, C2});
+    }
+
+    return danhSachBanMa;
+}
+
+string GiaiMa(const vector<pair<int, int>> &danhSachBanMa, int p, int x) {
+    string thongDiepGoc;
+    for (auto &[C1, C2] : danhSachBanMa) {
+        int K = power(C1, x, p);         // K = C1^x mod p
+        int C = nghichdao(K, p);      // Tìm K^-1 mod p
+        int M = (1LL * C2 * C) % p;    // M = C2 * K^-1 mod p
+        thongDiepGoc += (char)M;
+    }
+    return thongDiepGoc;
+}
+
+
+int main()
+{
+    srand(time(0));
+    int a1, b1;
+    cout<<"Nhap khoang gia tri: ";
+    cin>>a1>>b1;
+    cin.ignore();
+    int p=SinhSNT(a1,b1);
+    int a,x,y;
+    SinhKoa(p,a,x,y);
+    cout<<"Khoa cong khai: (p = "<<p<<", a = "<<a<<",y = "<<y<<")"<<endl;
+    cout<<"Khoa bi mat: (p = "<<p<<", a = "<<a<<",x = "<<x<<")"<<endl;
+    string M;
+    cout << "\nNhap thong diep (chuoi hoac so): ";
+    getline(cin, M);
+    auto danhSachBanMa = MaHoa(M,p,a,y);
+    cout << "\n== BAN MA ==" << endl;
+    for (const auto &capMa : danhSachBanMa) {
+        cout << "(" << capMa.first << ", " << capMa.second << ") ";
+    }
+    cout << endl;
+    cout<<"Giai Ma: "<<GiaiMa(danhSachBanMa,p,x);
+    return 0;
+}
